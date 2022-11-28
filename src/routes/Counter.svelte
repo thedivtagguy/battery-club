@@ -1,10 +1,34 @@
 <script>
 	import { spring } from 'svelte/motion';
+	import data from '$lib/data/battery.json';
+	console.log(data);
+	let  wattage = 0;
+	$: battery_type = 'Mahabali';
 
-	let count = 0;
+	let batteryDataKey = 'Company';
 
+	// Get all unique battery company names
+	let companies = data.map((item) => item.Company);
+	let uniqueCompanies = [...new Set(companies)];
+	console.log(uniqueCompanies);
+
+
+
+	// Data is an array of objects
+	// Each object has a key of Company
+
+	// Display the object where Company = 'Mahabali'
+
+	$: batteryData = data.filter((item) => item.Company === battery_type);
+	$: console.log(batteryData);
+
+	// Calculate the wattage
+	// Formula is ((10*"Amp Hours")/wattage)*60
+	$: batteryLife = ((10 * batteryData[0]["Amp Hours"]) / wattage) * 60;
+
+    // Function to 
 	const displayed_count = spring();
-	$: displayed_count.set(count);
+	$: displayed_count.set(wattage);
 	$: offset = modulo($displayed_count, 1);
 
 	function modulo(n, m) {
@@ -13,12 +37,25 @@
 	}
 </script>
 
+
+<h2>Enter your battery's company</h2>
+
+<!-- Dropdown to select display company names from data -->
+<select bind:value={battery_type}>
+	{#each uniqueCompanies as company}
+		<option value={company}>{company}</option>
+	{/each}
+</select>
+
+<h2> Enter your wattage</h2> 
 <div class="counter">
-	<button on:click={() => (count -= 1)} aria-label="Decrease the counter by one">
+	<button on:click={() => (wattage -= 1)} aria-label="Decrease the counter by one">
 		<svg aria-hidden="true" viewBox="0 0 1 1">
 			<path d="M0,0.5 L1,0.5" />
 		</svg>
 	</button>
+
+	
 
 	<div class="counter-viewport">
 		<div class="counter-digits" style="transform: translate(0, {100 * offset}%)">
@@ -27,11 +64,28 @@
 		</div>
 	</div>
 
-	<button on:click={() => (count += 1)} aria-label="Increase the counter by one">
+	<button on:click={() => (wattage += 1)} aria-label="Increase the counter by one">
 		<svg aria-hidden="true" viewBox="0 0 1 1">
 			<path d="M0,0.5 L1,0.5 M0.5,0 L0.5,1" />
 		</svg>
 	</button>
+</div>
+
+<h2> Your battery life is: </h2>
+<!-- Display battery life -->
+<div class="counter">
+	<div class="counter-viewport">
+		<div class="counter-digits" >
+			<p>
+				<!-- Display if battery life is not INFINITY -->
+				{#if batteryLife !== Infinity}
+					{Math.floor(batteryLife)}
+				{:else}
+					Enter a wattage
+				{/if}
+			</p>
+		</div>
+	</div>
 </div>
 
 <style>
@@ -98,5 +152,13 @@
 	.hidden {
 		top: -100%;
 		user-select: none;
+	}
+
+	select {
+		width: 40%;
+		padding: 0.5rem;
+		border: 1px solid #ccc;
+		border-radius: 4px;
+		box-sizing: border-box;
 	}
 </style>
